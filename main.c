@@ -1,37 +1,31 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include "thread.h"
 #include "timer.h"
+#include "fifo.h"
 
 
-static int current_task = 0;
-void scheduler(int signum) {
-        int next_task = (current_task+1)%2;
-        struct thread *current;
-        struct thread *next;
-        current = thread_pool[current_task++];
-        next = thread_pool[next_task];
-        printf("Scheduler\n");
-        swapcontext(current->context, next->context);
-
-}
 static void thread_function1(void *args) {
+        int x = 10;
         for(;;) {
-                fprintf(stderr,"1");
-                sleep(1);
+                fprintf(stdout,"%d\n", x++);
         }
 }
 static void thread_function2(void *args) {
+        int x = 20000;
         for(;;) {
-                fprintf(stderr,"2");
-                sleep(1);
+                fprintf(stdout,"%d\n", x++);
         }
 }
 int main() {
         //Setup timer, this effectively start scheduler
+        //This is for initial context
+
+        sched_init();
         mythread_start(thread_function1, NULL);
         mythread_start(thread_function2, NULL);
-        timer_setup(scheduler, 500000);
+        timer_setup(sig_timer_handler, 100000);
         //Should not return;
         for(;;) {
         }

@@ -27,3 +27,4 @@ void timer_setup(void (*alrmHandler)(int), int usec) {
                 exit(-1);
         }
 }
+

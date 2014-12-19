@@ -3,13 +3,19 @@
 #include <ucontext.h>
 
 #define STACK_SIZE (32*1024)
+
 typedef unsigned int tid_t;
+enum THREAD_STATE {
+        RUNNABLE,
+        FINISHED
+};
 struct thread {
-        struct ucontext *context;
         tid_t tid;
-        unsigned char stack[STACK_SIZE];
+        struct ucontext *context;
         size_t stack_size;
+        unsigned char stack[STACK_SIZE];
         void (*thread_fn)(void *args);
+        enum THREAD_STATE state;
 };
 
 

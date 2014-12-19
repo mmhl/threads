@@ -7,25 +7,27 @@
 
 
 static void thread_function1(void *args) {
-        int x = 10;
-        for(;;) {
-                fprintf(stdout,"%d\n", x++);
+        int i= 0;
+        for(i=0;i<10;i++) {
+                fprintf(stdout,"%d\n", i);
         }
+        mythread_exit();
 }
 static void thread_function2(void *args) {
         int x = 20000;
         for(;;) {
                 fprintf(stdout,"%d\n", x++);
+                if(x==20015) 
+                        return;
         }
 }
-int main() {
-        //Setup timer, this effectively start scheduler
-        //This is for initial context
 
+int main() {
+        //This is for initial context
         sched_init();
         mythread_start(thread_function1, NULL);
         mythread_start(thread_function2, NULL);
-        timer_setup(sig_timer_handler, 100000);
+        timer_setup(sig_timer_handler, 250000);
         //Should not return;
         for(;;) {
         }

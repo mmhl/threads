@@ -20,6 +20,14 @@ struct thread* thread_create(void (*thread_fn)(void *args)) {
         new_thread->thread_fn = thread_fn;
         return new_thread;
 }
+
+void __thread_start(void (*fn)(void *), void *args) {
+        printf("Starting thread\n");
+        fn(args);
+        current->state = FINISHED;
+        printf("Thread finished\n");
+}
+
 void mythread_start(void (*thread_fn)(), void *args) {
         struct thread *new_thread;
         struct ucontext *curr;
@@ -32,35 +40,71 @@ void mythread_start(void (*thread_fn)(), void *args) {
         curr->uc_stack.ss_sp = new_thread->stack;
         curr->uc_stack.ss_size = new_thread->stack_size;
         curr->uc_stack.ss_flags = 0;
+        curr->uc_link = sched.context;
 
         new_thread->context = curr;
         new_thread->thread_fn = thread_fn;
         new_thread->tid = ++tid_counter;
-        makecontext(new_thread->context, thread_fn, 1, args);
+        makecontext(new_thread->context, 
+                        (void(*)())__thread_start, 2, new_thread->thread_fn, args);
         queue_enqueue(new_thread);
         printf("Created thread with tid %d\n", new_thread->tid);
 
 }
-
+//Thread voluntarily kills itself
+int mythread_exit() {
+        printf("Thread kill: %d \n", current->tid);
+        current->state = FINISHED;
+        schedule();
+}
 
 void sig_timer_handler(int signum) {
-        //TODO: Disable timers!
+        printf("timer\n");
         schedule();
 }
 
 //Create minimal context to start up
 void sched_init() {
+        sched.stack_size = STACK_SIZE;
         sched.context = malloc(sizeof(struct ucontext));
-        getcontext(sched.context); // sched context
+        getcontext(sched.context); 
+        sched.tid = 1;
+        sched.context->uc_stack.ss_sp = sched.stack;
+        sched.context->uc_stack.ss_size = sched.stack_size;
+        sched.context->uc_stack.ss_flags = 0;
+        sched.thread_fn = schedule;
+        makecontext(sched.context, schedule, 0);
         current = &sched;
 }
 //scheduler main function
 void schedule() {
+        printf("Schedule\n");
+        preempt_disable();
+        struct thread *prev= current;
         struct thread *next = queue_dequeue();
-        struct thread *prev = current;
-        queue_enqueue(next); // if thread is not finished yet: TODO, add it to the end of the list
-        fprintf(stdout, "Scheduling thread with tid %d\n", next->tid);
-        current = next;
+        if(next == NULL)  // if no new task is available, use sched
+                next = &sched;
+        printf("prev: %d next: %d\n", prev->tid, next->tid);
+        if(current->state != FINISHED && current->tid != 1) {
+                printf("Enqueue task %d\n", current->tid);
+                queue_enqueue(current);
+        }
+        else {
+                printf("thread %d is finished\n", current->tid);
+        }
+
+        prev = current;
         //enqueue current running thread to the end of the queue
-        swapcontext(prev->context, next->context);
+        preempt_enable();
+        printf("current: %d, %d to %d\n", current->tid, prev->tid, next->tid);
+        current = next;
+        swapcontext(prev->context, current->context);
+}
+
+
+void preempt_disable() {
+        timer_disable();
+}
+void preempt_enable() {
+        timer_enable();
 }

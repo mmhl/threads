@@ -26,7 +26,8 @@ struct thread *queue_dequeue() {
         struct thread *t;
         if(queue_is_empty())
                 return NULL;
-        t = fifo[head++];
+        t = fifo[head];
+        fifo[head++]= NULL;
         if(head == FIFO_SIZE)
                 head = 0;
         return t;

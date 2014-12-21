@@ -16,7 +16,7 @@ static void __thread_start(void (*fn)(void *), void *args) {
 }
 
 static void __thread_cleanup(struct thread *th) {
-        printf("Cleaning up after thread %d\n", th->tid);
+        //printf("Cleaning up after thread %d\n", th->tid);
         free(th->context); 
         free(th);
 }
@@ -51,10 +51,10 @@ int mythread_exit() {
 }
 
 int mythread_kill(tid_t tid) {
-        printf("%d tries to kill %d\n", current->tid, tid);
+        //printf("%d tries to kill %d\n", current->tid, tid);
         struct thread *t = queue_find(tid, &thread_queue);
         if(t != NULL) {
-                printf("FOUND %d\n", tid);
+                //printf("FOUND %d\n", tid);
                 t->state = FINISHED;
                 return 0;
         }
@@ -62,7 +62,7 @@ int mythread_kill(tid_t tid) {
 }
 
 void mythread_yield() {
-        printf("%d yields\n", current->tid);
+        //printf("%d yields\n", current->tid);
         schedule();
 }
 
@@ -92,20 +92,20 @@ void schedule() {
         struct thread *next = queue_dequeue(&thread_queue);
 
         if(next == NULL ) {
-                printf("No more tasks\n");
+                //printf("No more tasks\n");
                 next = &sched;
         }
         else if(next->state == FINISHED) {
-                printf("Cleanup stale stask %d\n", next->tid);
+                //printf("Cleanup stale stask %d\n", next->tid);
                 next = &sched;
         }
 
         if(current->state != FINISHED && current != &sched) {
-                printf("task %d still has some work to do\n", current->tid);
+                //printf("task %d still has some work to do\n", current->tid);
                 queue_enqueue(current,&thread_queue);
         }
         else if(current->state == FINISHED) {
-                printf("task %d finished\n", current->tid);
+                //printf("task %d finished\n", current->tid);
                 __thread_cleanup(current);
                 current = NULL;
         }
@@ -114,11 +114,11 @@ void schedule() {
 
         preempt_enable();
         if(prev == NULL) {
-                printf("Set context to: %d\n", next->tid);
+                //printf("Set context to: %d\n", next->tid);
                 setcontext(next->context);
         }
         else {
-                printf("Set context from %d to: %d\n", prev->tid, next->tid);
+                //printf("Set context from %d to: %d\n", prev->tid, next->tid);
                 swapcontext(prev->context, next->context);
         }
 }

@@ -4,26 +4,38 @@
 #include "thread.h"
 #include "timer.h"
 #include "fifo.h"
+#include "mutex.h"
 
+mutex_t out_mutex;
 unsigned int counters[3];
 static void thread_function1(void *args) {
         int i;
-        for(i=0;i<100;i++) {
-                counters[0]++;
-                mythread_yield();
+        mutex_lock(&out_mutex);
+        for(i=0;i<10;i++) {
+                printf("Hello %d from thread one\n", i);
+                usleep(500000);
         }
+        mutex_unlock(&out_mutex);
         mythread_kill(1002);
         mythread_exit();
 }
 static void thread_function2(void *args) {
-        for(;;) {
-                counters[1]++;
+        int i;
+        mutex_lock(&out_mutex);
+        for(i=10;i < 20; i++) {
+                printf("Hello %d from thread two\n", i);
+                usleep(750000);
         }
+        mutex_unlock(&out_mutex);
 }
 static void thread_function3(void *args) {
-        for(;;) {
-                counters[2]++;
+        int i;
+        mutex_lock(&out_mutex);
+        for(i=30;i < 40; i++) {
+                printf("Hello %d from thread three\n", i);
+                usleep(550000);
         }
+        mutex_unlock(&out_mutex);
 }
 
 int main() {

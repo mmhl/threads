@@ -1,30 +1,33 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "thread.h"
+#include "timer.h"
 #include "fifo.h"
 
 struct thread *current;
 struct thread sched;
-
 struct fifo thread_queue;
 
 static tid_t tid_counter = 1000;
 
 static void __thread_start(void (*fn)(void *), void *args) {
-        printf("Starting thread\n");
         fn(args);
         current->state = FINISHED;
-        printf("Thread finished\n");
+}
+
+static void __thread_cleanup(struct thread *th) {
+        printf("Cleaning up after thread %d\n", th->tid);
+        free(th->context); 
+        free(th);
 }
 
 void mythread_start(void (*thread_fn)(), void *args) {
         struct thread *new_thread;
         struct ucontext *curr;
-        printf("Creating a new thread");
         curr = malloc(sizeof(struct ucontext));
         new_thread = calloc(1, sizeof(struct thread));
         new_thread->stack_size = STACK_SIZE;
-        //Get current context 
+
         getcontext(curr); 
         curr->uc_stack.ss_sp = new_thread->stack;
         curr->uc_stack.ss_size = new_thread->stack_size;

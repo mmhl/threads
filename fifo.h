@@ -6,6 +6,7 @@ struct fifo {
         struct thread *queue[FIFO_SIZE];
         int head;
         int tail;
+        int elems;
 };
 int queue_is_empty(struct fifo *q);
 int queue_is_full(struct fifo *q);

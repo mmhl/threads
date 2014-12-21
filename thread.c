@@ -47,6 +47,16 @@ int mythread_exit() {
         schedule();
 }
 
+int mythread_kill(tid_t tid) {
+        struct thread *t = queue_find(tid, &thread_queue);
+        if(t != NULL) {
+                printf("Found thread with tid %d, killing\n", t->tid);
+                t->state = FINISHED;
+                return 0;
+        }
+        return -1;
+}
+
 
 void sig_timer_handler(int signum) {
         printf("timer\n");
@@ -72,7 +82,7 @@ void schedule() {
         preempt_disable();
         struct thread *prev= current;
         struct thread *next = queue_dequeue(&thread_queue);
-        if(next == NULL)  // if no new task is available, use sched
+        if(next == NULL || next->state == FINISHED)  // if no new task is available, use sched
                 next = &sched;
         printf("prev: %d next: %d\n", prev->tid, next->tid);
         if(current->state != FINISHED && current->tid != 1) {

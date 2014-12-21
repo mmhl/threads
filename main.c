@@ -31,9 +31,8 @@ int main() {
         mythread_start(thread_function1, NULL);
         mythread_start(thread_function2, NULL);
         timer_setup(sig_timer_handler, 250000);
-        //Should not return;
-        for(;;) {
-        }
+        schedule();
+        while(1);
         return 0;
 
 }

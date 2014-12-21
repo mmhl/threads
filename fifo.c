@@ -30,3 +30,12 @@ struct thread *queue_dequeue(struct fifo *q) {
 
 }
 
+struct thread *queue_find(tid_t tid, struct fifo *q) {
+        int i;
+        for(i = q->head; i != q->tail; i++) {
+                struct thread *t = q->queue[i];
+                if(t->tid == tid)
+                        return t;
+        }
+        return NULL;
+}

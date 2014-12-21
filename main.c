@@ -8,15 +8,18 @@
 
 static void thread_function1(void *args) {
         int i= 0;
-        for(i=0;i<10;i++) {
+        for(i=0;i<5;i++) {
                 fprintf(stdout,"%d\n", i);
+                sleep(1);
         }
+        mythread_kill(1002);
         mythread_exit();
 }
 static void thread_function2(void *args) {
         int x = 20000;
         for(;;) {
                 fprintf(stdout,"%d\n", x++);
+                sleep(1);
                 if(x==20015) 
                         return;
         }

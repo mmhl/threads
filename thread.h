@@ -21,8 +21,9 @@ struct thread {
 
 struct thread *thread_create(void (*thread_fn)(void *args));
 void mythread_start(void (*thread_fn)(void *args), void *args);
-int mythread_exit();
-int mythread_kill();
+int mythread_exit(void);
+int mythread_kill(tid_t tid);
+void mythread_yield(void);
 
 //TODO: Some timer disable/enable code
 //Schedule

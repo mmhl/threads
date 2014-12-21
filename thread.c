@@ -40,32 +40,37 @@ void mythread_start(void (*thread_fn)(), void *args) {
         makecontext(new_thread->context, 
                         (void(*)())__thread_start, 2, new_thread->thread_fn, args);
         queue_enqueue(new_thread, &thread_queue);
-        printf("Created thread with tid %d\n", new_thread->tid);
         new_thread->state= RUNNABLE;
 
 }
-//Thread voluntarily kills itself
+//Thread voluntarily kills itself. Should not return
 int mythread_exit() {
-        printf("Thread kill: %d \n", current->tid);
         current->state = FINISHED;
         schedule();
+        return 0; // silence the compiler
 }
 
 int mythread_kill(tid_t tid) {
+        printf("%d tries to kill %d\n", current->tid, tid);
         struct thread *t = queue_find(tid, &thread_queue);
         if(t != NULL) {
-                printf("Found thread with tid %d, killing\n", t->tid);
+                printf("FOUND %d\n", tid);
                 t->state = FINISHED;
                 return 0;
         }
         return -1;
 }
 
-
-void sig_timer_handler(int signum) {
-        printf("timer\n");
+void mythread_yield() {
+        printf("%d yields\n", current->tid);
         schedule();
 }
+
+
+void sig_timer_handler(int signum) {
+        schedule();
+}
+
 
 //Create minimal context to start up
 void sched_init() {

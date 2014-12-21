@@ -38,6 +38,7 @@ void mythread_start(void (*thread_fn)(), void *args) {
                         (void(*)())__thread_start, 2, new_thread->thread_fn, args);
         queue_enqueue(new_thread, &thread_queue);
         printf("Created thread with tid %d\n", new_thread->tid);
+        new_thread->state= RUNNABLE;
 
 }
 //Thread voluntarily kills itself
@@ -92,13 +93,12 @@ void schedule() {
         else {
                 printf("thread %d is finished\n", current->tid);
         }
-
         prev = current;
         //enqueue current running thread to the end of the queue
         preempt_enable();
         printf("current: %d, %d to %d\n", current->tid, prev->tid, next->tid);
         current = next;
-        swapcontext(prev->context, current->context);
+        swapcontext(prev->context, next->context);
 }
 
 

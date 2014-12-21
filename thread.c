@@ -9,21 +9,8 @@ struct thread sched;
 struct fifo thread_queue;
 
 static tid_t tid_counter = 1000;
-struct thread* thread_create(void (*thread_fn)(void *args)) {
-        struct thread *new_thread;
-        struct ucontext *curr;
-        printf("Creating a new thread");
-        new_thread = calloc(1, sizeof(struct thread));
-        curr = malloc(sizeof(struct ucontext));
-        //Get current context 
-        getcontext(curr); 
-        
-        new_thread->context = curr;
-        new_thread->thread_fn = thread_fn;
-        return new_thread;
-}
 
-void __thread_start(void (*fn)(void *), void *args) {
+static void __thread_start(void (*fn)(void *), void *args) {
         printf("Starting thread\n");
         fn(args);
         current->state = FINISHED;

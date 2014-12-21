@@ -87,26 +87,40 @@ void sched_init() {
 }
 //scheduler main function
 void schedule() {
-        printf("Schedule\n");
         preempt_disable();
         struct thread *prev= current;
         struct thread *next = queue_dequeue(&thread_queue);
-        if(next == NULL || next->state == FINISHED)  // if no new task is available, use sched
+
+        if(next == NULL ) {
+                printf("No more tasks\n");
                 next = &sched;
-        printf("prev: %d next: %d\n", prev->tid, next->tid);
-        if(current->state != FINISHED && current->tid != 1) {
-                printf("Enqueue task %d\n", current->tid);
+        }
+        else if(next->state == FINISHED) {
+                printf("Cleanup stale stask %d\n", next->tid);
+                next = &sched;
+        }
+
+        if(current->state != FINISHED && current != &sched) {
+                printf("task %d still has some work to do\n", current->tid);
                 queue_enqueue(current,&thread_queue);
         }
-        else {
-                printf("thread %d is finished\n", current->tid);
+        else if(current->state == FINISHED) {
+                printf("task %d finished\n", current->tid);
+                __thread_cleanup(current);
+                current = NULL;
         }
         prev = current;
-        //enqueue current running thread to the end of the queue
-        preempt_enable();
-        printf("current: %d, %d to %d\n", current->tid, prev->tid, next->tid);
         current = next;
-        swapcontext(prev->context, next->context);
+
+        preempt_enable();
+        if(prev == NULL) {
+                printf("Set context to: %d\n", next->tid);
+                setcontext(next->context);
+        }
+        else {
+                printf("Set context from %d to: %d\n", prev->tid, next->tid);
+                swapcontext(prev->context, next->context);
+        }
 }
 
 

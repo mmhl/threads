@@ -6,6 +6,8 @@
 struct thread *current;
 struct thread sched;
 
+struct fifo thread_queue;
+
 static tid_t tid_counter = 1000;
 struct thread* thread_create(void (*thread_fn)(void *args)) {
         struct thread *new_thread;
@@ -47,7 +49,7 @@ void mythread_start(void (*thread_fn)(), void *args) {
         new_thread->tid = ++tid_counter;
         makecontext(new_thread->context, 
                         (void(*)())__thread_start, 2, new_thread->thread_fn, args);
-        queue_enqueue(new_thread);
+        queue_enqueue(new_thread, &thread_queue);
         printf("Created thread with tid %d\n", new_thread->tid);
 
 }
@@ -57,6 +59,7 @@ int mythread_exit() {
         current->state = FINISHED;
         schedule();
 }
+
 
 void sig_timer_handler(int signum) {
         printf("timer\n");
@@ -81,13 +84,13 @@ void schedule() {
         printf("Schedule\n");
         preempt_disable();
         struct thread *prev= current;
-        struct thread *next = queue_dequeue();
+        struct thread *next = queue_dequeue(&thread_queue);
         if(next == NULL)  // if no new task is available, use sched
                 next = &sched;
         printf("prev: %d next: %d\n", prev->tid, next->tid);
         if(current->state != FINISHED && current->tid != 1) {
                 printf("Enqueue task %d\n", current->tid);
-                queue_enqueue(current);
+                queue_enqueue(current,&thread_queue);
         }
         else {
                 printf("thread %d is finished\n", current->tid);

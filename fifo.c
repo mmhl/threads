@@ -1,35 +1,31 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "thread.h"
+#include "fifo.h"
 
-
-#define FIFO_SIZE 64
-static struct thread *fifo[FIFO_SIZE];
-static int head, tail;
-
-int queue_is_empty() {
-        return head == tail;
+int queue_is_empty(struct fifo *q) {
+        return q->head == q->tail;
 }
-int queue_is_full() {
-        if(tail == FIFO_SIZE)
+int queue_is_full(struct fifo *q) {
+        if(q->tail == FIFO_SIZE)
                 return 1;
         return 0;
 }
 
-int queue_enqueue(struct thread *thr) {
-        if(queue_is_full())
+int queue_enqueue(struct thread *thr,struct fifo *q) {
+        if(queue_is_full(q))
                 return -1;
-        fifo[tail++] = thr;
+        q->queue[q->tail++] = thr;
         return 0;
 }
-struct thread *queue_dequeue() {
+struct thread *queue_dequeue(struct fifo *q) {
         struct thread *t;
-        if(queue_is_empty())
+        if(queue_is_empty(q))
                 return NULL;
-        t = fifo[head];
-        fifo[head++]= NULL;
-        if(head == FIFO_SIZE)
-                head = 0;
+        t = q->queue[q->head];
+        q->queue[q->head++]= NULL;
+        if(q->head == FIFO_SIZE)
+                q->head = 0;
         return t;
 
 }
